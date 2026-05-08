@@ -1,6 +1,6 @@
-path: add_path/training/data   #* absolute path for data
-train: images/train   #* relative path for train images
-val: images/train   #* relative path for validation images (currently same as train set)
+path: ./data   #* 相對路徑，適用於從 training/ 目錄執行
+train: images/train   #* 相對路徑於 path
+val: images/train   
 test: images/test
 
 
