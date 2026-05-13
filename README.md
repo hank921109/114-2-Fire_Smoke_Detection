@@ -9,7 +9,7 @@
 * **模型支援**：同時支援 YOLOv8 Nano 與 Small 兩種權重模型供使用者切換。
 
 ### 效能
-* **速度**：要求達到即時或近乎即時的推論速度。系統會顯示計算延遲（Latency），單位為秒。
+* **速度**：要求 FPS 達到3 以上。
 * **特性**：
     * **Nano 模型**：推論速度較快但精準度稍低。
     * **Small 模型**：速度稍慢但擁有較高的精確度與信心水準。
@@ -25,7 +25,6 @@
 針對 **Raspberry Pi 4** 等效能有限的裝置，本專案提供以下優化措施：
 * **尺寸優化**：建議將 `imgsz` 調降至 **320**，以平衡推論延遲與精確度。
 * **模型轉換**：支援轉換為 **NCNN** 格式，顯著提升在 ARM CPU 上的推論效率。
-* **模型建議**：在低功耗硬體上建議僅使用 **Nano 模型** 以確保即時性。
 
 ### 界面
 * **檔案輸入 (File Input)**：支援從本機上傳圖片（jpg, jpeg, png）。
@@ -48,13 +47,25 @@
 
 ## 2. 分析 (Analysis)
 
-### 系統與模組拆分
-將整個系統拆分為三大模組：
-* **Frontend (UI) 模組**：基於 Streamlit 實作，負責接收參數與渲染影像。
-    * **Preprocessing (前處理) 小模組**：PIL.Image 讀取與 Byte 轉換，requests 處理 URL 影像流。
-* **AI Inference (推論) 大模組**：
-    * **CNN 模型**：Ultralytics YOLOv8 (Nano/Small) 架構。
-    * **OpenCV Post-processing (後處理)**：影像 BGR 轉 RGB (`res_image[..., ::-1]`)，並結合 NMS (Non-Maximum Suppression) 過濾重疊框。
+### 系統模組架構 (System Breakdown)
+下圖展示了系統的模組化拆解，並對應 DFD 中的資料處理流程：
+
+```mermaid
+graph LR
+    System[Fire Detection System]
+    
+    System --> UI[Frontend: Streamlit]
+    UI --> UI1["st.file_uploader() / requests.get()"]
+    UI --> UI2["Image.open() / PIL Preprocessing"]
+    
+    System --> Core[Inference: YOLOv8 Engine]
+    Core --> Core1["model.predict(imgsz=320)"]
+    
+    System --> Post[Post-processing: OpenCV / Numpy]
+    Post --> Post1["results[0].plot() (Bounding Boxes)"]
+    Post --> Post2["cv2.putText() (FPS Overlay)"]
+    Post --> Post3["res_image[..., ::-1] (BGR to RGB)"]
+```
 
 ---
 
@@ -139,6 +150,7 @@ Both models were trained for 150 epochs.
     <img src="assets/results_nano.png" alt="Nano model training results" style="width: 45%; margin: 5px;">
     <img src="assets/results_small.png" alt="Small model training results" style="width: 45%; margin: 5px;">
 </div>
+<p align="center"><i>Fig 1. Comparison of Training Metrics (Loss, Precision, mAP) between Nano and Small models over 150 epochs.</i></p>
 
 ### Good predictions
 Both models have shown great performance on most of the tested images.
@@ -146,6 +158,8 @@ Both models have shown great performance on most of the tested images.
     <img src="assets/smoke_fire_true_positive_nano.jfif" alt="Nano model predictions" style="width: 45%; margin: 5px;">
     <img src="assets/smoke_fire_true_positive_small.jfif" alt="Small model predictions" style="width: 45%; margin: 5px;">
 </div>
+<p align="center"><i>Fig 2. Visualization of True Positive detections for both models in high-visibility fire and smoke scenarios.</i></p>
+
 *While both models performed well, model based on YOLOv8s usually predicts with more precision and higher confidence levels.*
 
 ### Mixed predictions
@@ -154,7 +168,7 @@ Some predictions which resulted in different outcomes between the models.
     <img src="assets/smoke_false_negative_nano.jfif" alt="Nano model predictions" style="width: 45%; margin: 5px;">
     <img src="assets/smoke_false_negative_small.jfif" alt="Small model predictions" style="width: 45%; margin: 5px;">
 </div>
-*YOLOv8n based model fails to detect smoke objects in both images while the YOLOv8s does a good job detecting all objects.*
+<p align="center"><i>Fig 3. Edge Case Analysis: Comparative performance on challenging low-contrast smoke patterns (Nano failing vs. Small succeeding).</i></p>
 
 ---
 
@@ -166,5 +180,5 @@ To demonstrate the capabilities of the trained models, Streamlit was used to cre
 
 <div align="center">
   <img src="assets/app_test.PNG" alt="Streamlit app showcase" style="width: 80%; max-width: 800px;">
-  <p><i>Fire and Smoke Detection App Interface</i></p>
+  <p><i>Fig 4. Full-scale application deployment showcase featuring the Streamlit web interface and real-time detection output.</i></p>
 </div>
