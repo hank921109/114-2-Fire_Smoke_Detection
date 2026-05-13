@@ -4,6 +4,8 @@ import time
 import random
 import requests
 import torch
+import cv2
+import numpy as np
 from PIL import Image
 import streamlit as st
 from io import BytesIO
@@ -73,13 +75,30 @@ def predict_image(model, image, conf_threshold, iou_threshold):
             prediction_text = "No objects detected"
 
         # Calculate inference latency
-        latency = sum(res[0].speed.values())  # in ms, need to convert to seconds
-        latency = round(latency / 1000, 2)
-        prediction_text += f" in {latency} seconds."
+        latency_ms = sum(res[0].speed.values())  # in ms
+        latency = round(latency_ms / 1000, 2)
+        
+        # Calculate FPS
+        fps = 1000 / latency_ms if latency_ms > 0 else 0
+        prediction_text += f" in {latency} seconds. (FPS: {fps:.2f})"
 
-        # Convert the result image to RGB (plot() returns BGR; avoid cv2 so OpenCV system libs are optional)
+        # Convert the result image to RGB (plot() returns BGR)
         res_image = res[0].plot()
-        res_image = res_image[..., ::-1]
+        
+        # 追加 FPS 文字在畫面左上角 (OpenCV 格式為 BGR)
+        fps_text = f"FPS: {fps:.2f}"
+        cv2.putText(
+            res_image, 
+            fps_text, 
+            (20, 50),                 # 座標 (x, y)
+            cv2.FONT_HERSHEY_SIMPLEX, 
+            1.5,                      # 字體大小
+            (0, 255, 0),              # 顏色 (綠色 BGR)
+            3,                        # 線條寬度
+            cv2.LINE_AA
+        )
+
+        res_image = res_image[..., ::-1] # BGR to RGB
 
         return res_image, prediction_text
     
