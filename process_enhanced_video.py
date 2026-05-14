@@ -21,6 +21,11 @@ torch.load = _torch_load_patch
 read_queue = Queue(maxsize=30)
 write_queue = Queue(maxsize=30)
 
+# Pre-calculate Gamma LUT (Gamma 1.2)
+GAMMA = 1.2
+invGamma = 1.0 / GAMMA
+GAMMA_LUT = np.array([((i / 255.0) ** invGamma) * 255 for i in np.arange(0, 256)]).astype("uint8")
+
 def apply_preprocessing(frame):
     # CLAHE
     lab = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
@@ -30,11 +35,8 @@ def apply_preprocessing(frame):
     processed = cv2.merge((cl, a, b))
     processed = cv2.cvtColor(processed, cv2.COLOR_LAB2BGR)
     
-    # Gamma 1.2
-    gamma = 1.2
-    invGamma = 1.0 / gamma
-    table = np.array([((i / 255.0) ** invGamma) * 255 for i in np.arange(0, 256)]).astype("uint8")
-    processed = cv2.LUT(processed, table)
+    # Apply pre-calculated Gamma LUT
+    processed = cv2.LUT(processed, GAMMA_LUT)
     return processed
 
 def reader(video_path):

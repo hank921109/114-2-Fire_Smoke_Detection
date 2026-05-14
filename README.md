@@ -59,7 +59,7 @@ graph LR
 
     System --> UI[Frontend: Streamlit / CLI]
     UI --> UI1["cv2.VideoCapture() (Reader Thread)"]
-    UI --> UI2["CLAHE + Gamma Enhancement (Worker Thread)"]
+    UI --> UI2["CLAHE + Gamma Enhancement (Worker Thread) LUT"]
 
     System --> Core[Inference: NCNN INT8 Engine]
     Core --> Core1["model.predict(imgsz=320, task='detect')"]
@@ -86,7 +86,7 @@ graph LR
 ### Data Flow Diagram (資料流圖)
 ```mermaid
 graph TD
-    A[使用者輸入源] -- "Image/Video Frame (BGR)" --> B(影像增強: Worker Thread)
+    A[使用者輸入源] -- "Image/Video Frame (BGR)" --> B(影像增強: Worker Thread + LUT)
     B -- "CLAHE + Gamma (BGR)" --> C(推論引擎: NCNN INT8)
     P[使用者參數] -- "IOU / Conf / imgsz=320" --> C
     C -- "Detection Results" --> D(後處理: OpenCV / Numpy)
