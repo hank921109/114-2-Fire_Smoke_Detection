@@ -162,5 +162,7 @@ Some predictions which resulted in different outcomes between the models.
 ```bash
 source .venv/bin/activate && python3 process_enhanced_video.py
 ```
-`assets/videos/output_roomfire41.mp4` 即為處理後的成果。
+`assets/videos/output_roomfire41.mp4` 即為處理後的成果：
+
+<video src="assets/videos/output_roomfire41.mp4" width="100%" controls></video>
 
