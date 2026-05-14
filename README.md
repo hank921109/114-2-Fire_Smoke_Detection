@@ -25,7 +25,8 @@
 ### 邊緣運算優化 (Edge AI Optimization)
 針對 **Raspberry Pi 4** 等效能有限的裝置，本專案提供以下優化措施：
 * **尺寸優化**：建議將 `imgsz` 調降至 **320**，以平衡推論延遲與精確度。
-* **模型轉換**：支援轉換為 **NCNN** 格式，顯著提升在 ARM CPU 上的推論效率。
+* **模型轉換**：支援轉換為 **NCNN** (Next Generation CNN) 格式。
+    * **原理簡述**：NCNN 是騰訊開發的高效能神經網路推論框架，無第三方依賴且針對 ARM 平台（如 NEON 指令集）進行深度優化。透過多核並行運算、記憶體池複用機制與運算子融合（Operator Fusion），顯著提升在 ARM CPU 上的推論效率。
 
 ### 界面
 * **檔案輸入 (File Input)**：支援從本機上傳圖片（jpg, jpeg, png）。
@@ -85,11 +86,11 @@ graph LR
 ### Data Flow Diagram (資料流圖)
 ```mermaid
 graph TD
-    A[使用者輸入源] -- "Image/Video Frame (BGR)" --> B(影像增強模組)
-    B -- "CLAHE + Gamma (BGR)" --> C{YOLOv8 推論引擎}
+    A[使用者輸入源] -- "Image/Video Frame (BGR)" --> B(影像增強: Worker Thread)
+    B -- "CLAHE + Gamma (BGR)" --> C(推論引擎: NCNN INT8)
     P[使用者參數] -- "IOU / Conf / imgsz=320" --> C
-    C -- "Detection Results" --> D(OpenCV 標註與 FPS 疊加)
-    D -- "Processed Frame (RGB/BGR)" --> E[Streamlit 顯示 / 影片存檔]
+    C -- "Detection Results" --> D(後處理: OpenCV / Numpy)
+    D -- "Processed Frame (RGB/BGR)" --> E[前端界面: Streamlit / CLI]
 ```
 
 ### MSC (Message Sequence Chart - 訊息循序圖)
