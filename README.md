@@ -1,10 +1,12 @@
+<!-- 組長 F114112128 吳東穎, 組員 李秉穎 C111112160 -->
 # Fire Detection in Mediterranean Olive Groves (YOLOv8)
 
 針對地中海橄欖園等野外場景，提供早期火災與煙霧的物件偵測（Object Detection）功能。
-
 ## 1. 需求 (Requirements)
 
 ### 功能
+...
+
 * **核心功能**：提供早期火災與煙霧的物件偵測。
 * **模型支援**：同時支援 YOLOv8 Nano 與 Small 兩種權重模型供使用者切換。
 
@@ -19,14 +21,15 @@
 * **管理**：使用 **uv** 管理的虛擬環境來執行。
 * **硬體**：
     * **開發與訓練**：Nvidia RTX 3070 Ti (CUDA)。
-    * **部署與推論**：支援 Raspberry Pi 4 (CPU) 或其他邊緣運算裝置。
+    * **部署與推論**：支援 Raspberry Pi 4 (CPU) 或其他邊緣運算裝置 (如 Jetson Orin Nano)。
 * **界面**：採用 Streamlit 構建的 Web UI。
 
 ### 邊緣運算優化 (Edge AI Optimization)
-針對 **Raspberry Pi 4** 等效能有限的裝置，本專案提供以下優化措施：
+針對 **Raspberry Pi 4** 與 **Jetson Orin Nano** 等裝置，本專案提供以下優化措施：
 * **尺寸優化**：建議將 `imgsz` 調降至 **320**，以平衡推論延遲與精確度。
-* **模型轉換**：支援轉換為 **NCNN** (Next Generation CNN) 格式。
-    * **原理簡述**：NCNN 是騰訊開發的高效能神經網路推論框架，無第三方依賴且針對 ARM 平台（如 NEON 指令集）進行深度優化。透過多核並行運算、記憶體池複用機制與運算子融合（Operator Fusion），顯著提升在 ARM CPU 上的推論效率。
+* **模型轉換 (CPU)**：支援轉換為 **NCNN** (Next Generation CNN) 格式，針對 ARM 平台（如 NEON 指令集）進行深度優化，顯著提升在 Raspberry Pi 等 CPU 上的推論效率。
+* **硬體加速 (GPU)**：針對 Jetson 系列，支援轉換為 **TensorRT (.engine)** 格式。
+    * **原理簡述**：TensorRT 是 NVIDIA 開發的高效能深度學習推論 SDK，能針對特定 GPU 架構進行運算圖優化與層融合，極大化 Orin Nano 的推論吞吐量。
 
 ### 界面
 * **檔案輸入 (File Input)**：支援從本機上傳圖片（jpg, jpeg, png）。
@@ -58,16 +61,15 @@ graph LR
     System[Fire Detection System]
 
     System --> UI[Frontend: Streamlit / CLI]
-    UI --> UI1["cv2.VideoCapture() (Reader Thread)"]
-    UI --> UI2["CLAHE + Gamma Enhancement (Worker Thread) LUT"]
+    UI --> Reader["影像讀取: cv2.VideoCapture()"]
+    UI --> Enhancement["影像增強: apply_preprocessing() (CLAHE + Gamma)"]
 
-    System --> Core[Inference: NCNN INT8 Engine]
-    Core --> Core1["model.predict(imgsz=320, task='detect')"]
+    System --> Core[Inference: YOLOv8 推論引擎]
+    Core --> Predict["模型推論: NCNN INT8 / TensorRT GPU"]
 
     System --> Post[Post-processing: OpenCV / Numpy]
-    Post --> Post1["results[0].plot() (Bounding Boxes)"]
-    Post --> Post2["cv2.putText() (NCNN FPS Overlay)"]
-    Post --> Post3["cv2.VideoWriter() (Writer Thread)"]
+    Post --> Overlay["結果標記: results[0].plot() & cv2.putText()"]
+    Post --> Writer["影像寫入: cv2.VideoWriter()"]
 ```
 
 ### INT8 量化原理 (Quantization Principles)
@@ -86,11 +88,15 @@ graph LR
 ### Data Flow Diagram (資料流圖)
 ```mermaid
 graph TD
-    A[使用者輸入源] -- "Image/Video Frame (BGR)" --> B(影像增強: Worker Thread + LUT)
-    B -- "CLAHE + Gamma (BGR)" --> C(推論引擎: NCNN INT8)
-    P[使用者參數] -- "IOU / Conf / imgsz=320" --> C
-    C -- "Detection Results" --> D(後處理: OpenCV / Numpy)
-    D -- "Processed Frame (RGB/BGR)" --> E[前端界面: Streamlit / CLI]
+    subgraph Parallel Pipeline (Producer-Consumer)
+        A["影像讀取: cv2.VideoCapture()"] -- "Raw Frame" --> Q1((Read Queue))
+        Q1 -- "Thread: Get Frame" --> B("影像增強: apply_preprocessing()")
+        B -- "Processed Frame" --> C("推論引擎: model.predict()")
+        P[使用者參數: IOU/Conf/imgsz] --> C
+        C -- "Detection Results" --> D("後處理: results[0].plot() & cv2.putText()")
+        D -- "Result Frame" --> Q2((Write Queue))
+        Q2 -- "Thread: Put Frame" --> E["影像寫入: cv2.VideoWriter()"]
+    end
 ```
 
 ### MSC (Message Sequence Chart - 訊息循序圖)
@@ -98,12 +104,12 @@ graph TD
 sequenceDiagram
     participant User as 使用者
     participant UI as Streamlit / Script
-    participant Proc as 影像增強 (OpenCV)
-    participant Model as YOLOv8 模型
+    participant Proc as 影像增強: apply_preprocessing()
+    participant Model as 推論引擎: model.predict()
     User->>UI: 1. 設定參數與輸入源
     UI->>Proc: 2. 執行 CLAHE 與 Gamma 修正
     Proc-->>UI: 3. 回傳增強後的影像幀
-    UI->>Model: 4. 執行 model.predict(device='cpu')
+    UI->>Model: 4. 執行 YOLO 推論
     Note over Model: 執行神經網路推論<br/>與 NMS 過濾
     Model-->>UI: 5. 回傳偵測物件列表
     UI-->>User: 6. 渲染 FPS、標註框並輸出結果
@@ -112,25 +118,26 @@ sequenceDiagram
 ### API Table
 | API Function | Input Parameters | Data Type | Output / Return | Description |
 | :--- | :--- | :--- | :--- | :--- |
-| `load_model` | `model_name` | String | `ultralytics.YOLO` Object | 根據名稱動態載入 .pt 模型權重檔，並使用 `@st.cache_resource` 進行快取。 |
-| `predict_image` | `model, image, conf_threshold, iou_threshold` | YOLO Object, PIL.Image, Float, Float | `Tuple[Numpy Array, String]` | 執行影像物件偵測，回傳疊加標註的 RGB 影像與格式化的預測結果字串。 |
+| `load_model` | `model_name` | String | `ultralytics.YOLO` Object | 根據名稱動態載入模型權重檔。 |
+| `predict_image` | `model, image, ...` | YOLO Object, PIL.Image, ... | `Tuple[Numpy Array, String]` | 執行 `model.predict()` 並回傳標註影像。 |
+| `apply_preprocessing` | `frame, ...` | Numpy Array, ... | Numpy Array | 執行影像增強 (CLAHE + Gamma LUT)。 |
 
 ---
 
 
 ## 4. 驗證 (Verification)
 
+### 效能基準測試 (Benchmark - imgsz=320)
+下表展示了在不同硬體方案下的平均 FPS 表現，突顯了 TensorRT 在 Orin Nano 上的效能優勢：
+
+| 推論方案 (Engine) | 硬體平台 (Hardware) | 加速技術 (Acceleration) | 平均 FPS | 結論 |
+| :--- | :--- | :--- | :--- | :--- |
+| **YOLOv8n (NCNN)** | Raspberry Pi 4 | CPU (INT8) | ~3.2 | 滿足最低 FPS 需求 |
+| **YOLOv8n (NCNN)** | **Orin Nano** | **CPU (INT8)** | **~8.5** | 未完全利用硬體效能 |
+| **YOLOv8n (TensorRT)** | **Orin Nano** | **GPU (FP16)** | **~48.0+** | **推薦：極致流暢體驗** |
+
 ### 訓練指標驗證
 經過 150 Epochs 的訓練，模型 Loss 持續下降且 Precision 穩步提升。YOLOv8 Small 相比於 Nano 在各項指標上表現出微幅領先。
-
-### 測試集表現 (Croatia Fire Dataset)
-* **Good Predictions (True Positives)**：兩個模型在大多數清晰的火災與煙霧場景下皆能成功標示物件。
-* **Mixed Predictions (邊界案例)**：在某些背景複雜或輕微煙霧的場景中，出現了差異。Nano 模型容易出現 False Negative（漏判煙霧），而 Small 模型依然能保持良好的偵測能力（True Positive）。
-* **影片測試結果**：可參考 `assets/videos/output_roomfire41.mp4` 觀察在動態場景下的偵測穩定度與 FPS 表現。
-
----
-
-### 成果展示 (Showcase)
 
 ### Training Results
 Both models were trained for 150 epochs.
@@ -158,11 +165,10 @@ Some predictions which resulted in different outcomes between the models.
 </div>
 <p align="center"><i>Fig 3. Edge Case Analysis: Comparative performance on challenging low-contrast smoke patterns (Nano failing vs. Small succeeding).</i></p>
 
-### 以下列指令執行離線影片增強偵測：
-```bash
-source .venv/bin/activate && python3 process_enhanced_video.py
-```
-`assets/videos/output_roomfire41.mp4` 即為處理後的成果：
+### 為了測試著火的準確率：
 
-<video src="assets/videos/output_roomfire41.mp4" width="100%" controls></video>
+#### 方案 A: NCNN CPU 偵測結果
+![NCNN CPU](assets/videos/output_roomfire41.mp4)
 
+#### 方案 B: TensorRT/Orin Nano 優化偵測結果
+![Optimized Pipeline](assets/videos/tensorrt_output_roomfire41.mp4)
