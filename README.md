@@ -21,7 +21,7 @@
 * **管理**：使用 **uv** 管理的虛擬環境來執行。
 * **硬體**：
     * **開發與訓練**：Nvidia RTX 3070 Ti (CUDA)。
-    * **部署與推論**：支援 Raspberry Pi 4 (CPU) 或其他邊緣運算裝置 (如 Jetson Orin Nano)。
+    * **部署與推論**：支援 Raspberry Pi 4 (CPU)。
 * **界面**：採用 Streamlit 構建的 Web UI。
 
 ### 邊緣運算優化 (Edge AI Optimization)
@@ -99,6 +99,11 @@ graph TD
     end
 ```
 
+**5/25 效能優化更新**：
+為了在 Raspberry Pi 4 等資源受限設備上進一步提升 FPS，系統追加了以下前處理優化：
+*   **色彩感知感興趣區域 (Color-based ROI Masking)**：透過快速的 HSV 色彩統計檢查，若畫面中無疑似火煙色彩則跳過 YOLO 推論，大幅降低靜態背景下的運算負載。
+*   **硬體加速查表法 (LUT Optimization)**：預計算 Gamma 修正映射表並重用 CLAHE 物件，將複雜運算轉化為高效的記憶體查表，顯著減少每幀影像增強的 CPU 耗時。
+
 ### MSC (Message Sequence Chart - 訊息循序圖)
 ```mermaid
 sequenceDiagram
@@ -134,7 +139,7 @@ sequenceDiagram
 | :--- | :--- | :--- | :--- | :--- |
 | **YOLOv8n (NCNN)** | Raspberry Pi 4 | CPU (INT8) | ~3.2 | 滿足最低 FPS 需求 |
 | **YOLOv8n (NCNN)** | **Orin Nano** | **CPU (INT8)** | **~8.5** | 未完全利用硬體效能 |
-| **YOLOv8n (TensorRT)** | **Orin Nano** | **GPU (FP16)** | **~48.0+** | **推薦：極致流暢體驗** |
+| **YOLOv8n (TensorRT)** | **Orin Nano** | **GPU (FP16)** | **~30.0** | **推薦：極致流暢體驗** |
 
 ### 訓練指標驗證
 經過 150 Epochs 的訓練，模型 Loss 持續下降且 Precision 穩步提升。YOLOv8 Small 相比於 Nano 在各項指標上表現出微幅領先。
