@@ -25,11 +25,11 @@
 * **界面**：採用 Streamlit 構建的 Web UI。
 
 ### 邊緣運算優化 (Edge AI Optimization)
-針對 **Raspberry Pi 4** 與 **Jetson Orin Nano** 等裝置，本專案提供以下優化措施：
+針對 **Raspberry Pi 4** 與 **Raspberry Pi 5** 等裝置，本專案提供以下優化措施：
 * **尺寸優化**：建議將 `imgsz` 調降至 **320**，以平衡推論延遲與精確度。
 * **模型轉換 (CPU)**：支援轉換為 **NCNN** (Next Generation CNN) 格式，針對 ARM 平台（如 NEON 指令集）進行深度優化，顯著提升在 Raspberry Pi 等 CPU 上的推論效率。
-* **硬體加速 (GPU)**：針對 Jetson 系列，支援轉換為 **TensorRT (.engine)** 格式。
-    * **原理簡述**：TensorRT 是 NVIDIA 開發的高效能深度學習推論 SDK，能針對特定 GPU 架構進行運算圖優化與層融合，極大化 Orin Nano 的推論吞吐量。
+* **硬體加速 (NPU)**：針對 Raspberry Pi 5，支援搭配 AI 加速模組進行優化。
+    * **原理簡述**：透過專屬的神經網路加速器 (NPU) 進行運算圖優化，極大化 Raspberry Pi 5 的推論吞吐量。
 
 ### 界面
 * **檔案輸入 (File Input)**：支援從本機上傳圖片（jpg, jpeg, png）。
@@ -65,7 +65,7 @@ graph LR
     UI --> Enhancement["影像增強: apply_preprocessing() (CLAHE + Gamma)"]
 
     System --> Core[Inference: YOLOv8 推論引擎]
-    Core --> Predict["模型推論: NCNN INT8 / TensorRT GPU"]
+    Core --> Predict["模型推論: NCNN INT8 / Raspi 5 NPU"]
 
     System --> Post[Post-processing: OpenCV / Numpy]
     Post --> Overlay["結果標記: results[0].plot() & cv2.putText()"]
@@ -133,13 +133,13 @@ sequenceDiagram
 ## 4. 驗證 (Verification)
 
 ### 效能基準測試 (Benchmark - imgsz=320)
-下表展示了在不同硬體方案下的平均 FPS 表現，突顯了 TensorRT 在 Orin Nano 上的效能優勢：
+下表展示了在不同硬體方案下的平均 FPS 表現，突顯了 Raspberry Pi 5 加上硬體加速的效能優勢：
 
 | 推論方案 (Engine) | 硬體平台 (Hardware) | 加速技術 (Acceleration) | 平均 FPS | 結論 |
 | :--- | :--- | :--- | :--- | :--- |
 | **YOLOv8n (NCNN)** | Raspberry Pi 4 | CPU (INT8) | ~3.2 | 滿足最低 FPS 需求 |
-| **YOLOv8n (NCNN)** | **Orin Nano** | **CPU (INT8)** | **~8.5** | 未完全利用硬體效能 |
-| **YOLOv8n (TensorRT)** | **Orin Nano** | **GPU (FP16)** | **~30.0** | **推薦：極致流暢體驗** |
+| **YOLOv8n (NCNN)** | **Raspberry Pi 5** | **CPU (INT8)** | **~8.5** | 效能顯著提升 |
+| **YOLOv8n (AI 加速)** | **Raspberry Pi 5** | **NPU (FP16/INT8)** | **~30.0** | **推薦：極致流暢體驗** |
 
 ### 訓練指標驗證
 經過 150 Epochs 的訓練，模型 Loss 持續下降且 Precision 穩步提升。YOLOv8 Small 相比於 Nano 在各項指標上表現出微幅領先。
@@ -175,5 +175,5 @@ Some predictions which resulted in different outcomes between the models.
 #### 方案 A: NCNN CPU 偵測結果
 ![NCNN CPU](assets/videos/output_roomfire41.mp4)
 
-#### 方案 B: TensorRT/Orin Nano 優化偵測結果
-![Optimized Pipeline](assets/videos/tensorrt_output_roomfire41.mp4)
+#### 方案 B: Raspberry Pi 5 優化偵測結果
+![Optimized Pipeline](assets/videos/raspi5_output_roomfire41.mp4)
