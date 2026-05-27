@@ -89,15 +89,14 @@ graph LR
 ```mermaid
 graph TD
     subgraph Parallel Pipeline (Producer-Consumer)
-        A["影像讀取: cv2.VideoCapture()"] -- "Raw Frame" --> Q1((Read Queue))
-        Q1 -- "Thread: Get Frame" --> B("影像增強: apply_preprocessing()")
-        B -- "Processed Frame" --> C("推論引擎: model.predict()")
-        P[使用者參數: IOU/Conf/imgsz] --> C
-        C -- "Detection Results" --> D("後處理: results[0].plot() & cv2.putText()")
-        D -- "Result Frame" --> Q2((Write Queue))
-        Q2 -- "Thread: Put Frame" --> E["影像寫入: cv2.VideoWriter()"]
+        A["影像讀取: cv2.VideoCapture()"] -->|Raw Frame| Q1((Read Queue))
+        Q1 -->|Thread: Get Frame| B("影像增強: apply_preprocessing()")
+        B -->|Processed Frame| C("推論引擎: model.predict()")
+        P["使用者參數: IOU/Conf/imgsz"] --> C
+        C -->|Detection Results| D("後處理: results[0].plot() & cv2.putText()")
+        D -->|Result Frame| Q2((Write Queue))
+        Q2 -->|Thread: Put Frame| E["影像寫入: cv2.VideoWriter()"]
     end
-```
 
 **5/25 效能優化更新**：
 為了在 Raspberry Pi 4 等資源受限設備上進一步提升 FPS，系統追加了以下前處理優化：
