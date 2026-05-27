@@ -86,6 +86,7 @@ graph LR
 ## 3. 設計 (Design)
 
 ### Data Flow Diagram (資料流圖)
+
 ```mermaid
 graph TD
     subgraph "Parallel Pipeline (Producer-Consumer)"
