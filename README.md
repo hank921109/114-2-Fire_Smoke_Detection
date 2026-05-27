@@ -98,6 +98,7 @@ graph TD
         D -->|Result Frame| Q2((Write Queue))
         Q2 -->|Thread: Put Frame| E["影像寫入: cv2.VideoWriter()"]
     end
+```
 
 **5/25 效能優化更新**：
 為了在 Raspberry Pi 4 等資源受限設備上進一步提升 FPS，系統追加了以下前處理優化：
