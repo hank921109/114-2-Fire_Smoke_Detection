@@ -88,7 +88,7 @@ graph LR
 ### Data Flow Diagram (資料流圖)
 ```mermaid
 graph TD
-    subgraph Parallel Pipeline (Producer-Consumer)
+    subgraph "Parallel Pipeline (Producer-Consumer)"
         A["影像讀取: cv2.VideoCapture()"] -->|Raw Frame| Q1((Read Queue))
         Q1 -->|Thread: Get Frame| B("影像增強: apply_preprocessing()")
         B -->|Processed Frame| C("推論引擎: model.predict()")
