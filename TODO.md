@@ -25,6 +25,8 @@
 
 5/24
 1. 構思加快 FPS 的方法 (例如：跳幀處理、降低解析度、NCNN Vulkan 加速)
-2. 檢查 Breakdown 的模組名稱、Dataflow 的模組名稱、API table 的模組名稱，確保三者完全一致
-3. 創建 "pipeline" 資料夾，並修改程式碼儲存 Dataflow 各階段的中間結果 (如：CLAHE, Gamma, YOLO 偵測結果)
+
+6/2
+2. ~~檢查 Breakdown 的模組名稱、Dataflow 的模組名稱、API table 的模組名稱，確保三者完全一致~~
+3. ~~創建 "pipeline" 資料夾，並修改程式碼儲存 Dataflow 各階段的中間結果 (如：CLAHE, Gamma, YOLO 偵測結果)~~
 4. 將 NCNN CPU 方案 切換為 TensorRT GPU 方案 (針對 Jetson Orin Nano 優化)
