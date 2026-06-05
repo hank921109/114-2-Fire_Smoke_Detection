@@ -136,6 +136,24 @@ sequenceDiagram
 | `predict_image` | `model, image, ...` | YOLO Object, PIL.Image, ... | `Tuple[Numpy Array, String]` | 執行 `model.predict()` 並回傳標註影像。 |
 | `apply_preprocessing` | `frame, ...` | Numpy Array, ... | Numpy Array | 執行影像增強 (CLAHE + Gamma LUT)。 |
 
+### 影像處理管線 (Image Processing Pipeline)
+以下展示單張影像經過系統前處理與推論階段的各個中間結果：
+
+<div style="display: flex; justify-content: space-around; flex-wrap: wrap;">
+    <figure style="width: 30%; margin: 5px; text-align: center;">
+        <img src="pipeline/1_clahe.jpg" alt="CLAHE Result">
+        <figcaption>1. CLAHE 處理</figcaption>
+    </figure>
+    <figure style="width: 30%; margin: 5px; text-align: center;">
+        <img src="pipeline/2_gamma.jpg" alt="Gamma Correction">
+        <figcaption>2. Gamma 修正</figcaption>
+    </figure>
+    <figure style="width: 30%; margin: 5px; text-align: center;">
+        <img src="pipeline/3_yolo_result.jpg" alt="YOLO Inference">
+        <figcaption>3. YOLO 偵測結果</figcaption>
+    </figure>
+</div>
+
 ---
 
 
@@ -182,6 +200,17 @@ Some predictions which resulted in different outcomes between the models.
 
 #### 方案 A: NCNN CPU 偵測結果
 ![NCNN CPU](assets/videos/output_roomfire41.mp4)
+
+---
+
+### 建議改良 (Future Improvements)
+針對當前專案系統，以下列出後續可進行的優化建議與待辦事項：
+
+| 改善方向 | 建議方案 | 預期效益 |
+| :--- | :--- | :--- |
+| **FPS 提升策略** | 實作跳幀處理 (Frame Skipping) 或進一步降低推論解析度。 | 減輕邊緣裝置的運算負載，提升系統整體的即時性。 |
+| **邊緣裝置推論升級** | 探索並實作 NCNN Vulkan 加速方案。 | 透過調用 GPU 資源進一步釋放 CPU 壓力，提升推論速度。 |
+| **硬體專屬優化** | 將 NCNN CPU 方案切換為 TensorRT GPU 方案。 | 專為 Jetson Orin Nano 等具備 NVIDIA GPU 的邊緣裝置進行深度優化，最大化硬體效能。 |
 
 ---
 
