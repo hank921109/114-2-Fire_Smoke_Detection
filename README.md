@@ -1,13 +1,12 @@
 <!-- 組長 F114112128 吳東穎, 組員 李秉穎 C111112160 -->
 # Fire Detection in Mediterranean Olive Groves (YOLOv8)
 
-針對地中海橄欖園等野外場景，提供早期火災與煙霧的物件偵測（Object Detection）功能。
 ## 1. 需求 (Requirements)
 
 ### 功能
 ...
 
-* **核心功能**：提供早期火災與煙霧的物件偵測。
+* **功能**：提供早期火災與煙霧的物件偵測。
 * **模型支援**：同時支援 YOLOv8 Nano 與 Small 兩種權重模型供使用者切換。
 
 ### 效能
@@ -27,9 +26,9 @@
 ### 邊緣運算優化 (Edge AI Optimization)
 針對 **Raspberry Pi 4** 與 **Raspberry Pi 5** 等裝置，本專案提供以下優化措施：
 * **尺寸優化**：建議將 `imgsz` 調降至 **320**，以平衡推論延遲與精確度。
-* **模型轉換 (CPU)**：支援轉換為 **NCNN** (Next Generation CNN) 格式，針對 ARM 平台（如 NEON 指令集）進行深度優化，提升在 Raspberry Pi 等 CPU 上的推論效率。
+* **模型轉換 (CPU)**：支援轉換為 **NCNN** (Next Generation CNN) 格式，針對 ARM 平台（如 NEON 指令集）進行優化，提升在 Raspberry Pi 等 CPU 上的推論效率。
 * **硬體加速 (NPU)**：針對 Raspberry Pi 5，支援搭配 AI 加速模組進行優化。
-    * **原理簡述**：透過專屬的神經網路加速器 (NPU) 進行運算圖優化，提升 Raspberry Pi 5 的推論吞吐量。
+    * **原理簡述**：透過神經網路加速器 (NPU) 進行運算圖優化，提升 Raspberry Pi 5 的推論吞吐量。
 
 ### 界面
 * **檔案輸入 (File Input)**：支援從本機上傳圖片（jpg, jpeg, png）。
@@ -53,8 +52,8 @@
 
 ## 2. 分析 (Analysis)
 
-### 核心算法架構 (Core Algorithms: CLAHE, HSV, YOLOv8)
-下圖展示了核心算法的流程拆解，並對應 DFD 中的資料處理流程：
+### 算法架構 (Algorithms: CLAHE, HSV, YOLOv8)
+下圖展示了算法的流程拆解，並對應 DFD 中的資料處理流程：
 
 ```mermaid
 graph LR
@@ -75,18 +74,18 @@ graph LR
 | 算法名稱 (Algorithm) | What (定義/功能) | Why (使用目的) | How (實作方式) |
 | :--- | :--- | :--- | :--- |
 | **CLAHE** | 對比受限自適應直方圖均衡化 | 提升低對比度場景下煙霧的辨識度 | 將影像轉至 LAB 色彩空間，針對 L (亮度) 通道執行局部直方圖均衡化，並限制對比度以避免放大噪點。 |
-| **Gamma Correction** | 伽瑪修正 | 平衡野外環境光影，強化暗部細節 | 透過預計算查表法 (LUT) 執行非線性冪次轉換，修正感光元件擷取到的亮度偏差。 |
-| **HSV ROI Masking** | 色彩感知感興趣區域過濾 | 減少靜態或無關背景的無效運算，提高 FPS | 將縮圖轉為 HSV 色域，快速統計是否包含火災（紅/橘）或煙霧（灰/白）的色彩分佈，若無則跳過 YOLO 推論。 |
-| **YOLOv8** | 深度學習物件偵測神經網路 | 核心偵測引擎，自動標定火災與煙霧位置 | 採用 CSP 骨幹架構提取多尺度特徵，整合 PAN-FPN 頸部網絡進行精確的類別分類與座標預測。 |
-| **NCNN / INT8** | 模型推論優化與量化技術 | 讓複雜模型能在 Raspberry Pi 等低功耗 CPU 上執行 | 將 32-bit 浮點數權重映射至 8-bit 整數空間，並調用 ARM NEON 指令集進行並行加速運算。 |
+| **Gamma Correction** | 伽瑪修正 | 平衡野外環境光影，強化暗部細節 | 透過預計算查表法 (LUT) 執行非線性冪次轉換，修正亮度偏差。 |
+| **HSV ROI Masking** | 色彩感知感興趣區域過濾 | 減少靜態或無關背景的運算，提高 FPS | 將縮圖轉為 HSV 色域，統計是否包含火災（紅/橘）或煙霧（灰/白）的色彩分佈，若無則跳過 YOLO 推論。 |
+| **YOLOv8** | 深度學習物件偵測神經網路 | 偵測引擎，標定火災與煙霧位置 | 採用 CSP 骨幹架構提取多尺度特徵，整合 PAN-FPN 頸部網絡進行類別分類與座標預測。 |
+| **NCNN / INT8** | 模型推論優化與量化技術 | 讓模型能在 Raspberry Pi 等 CPU 上執行 | 將 32-bit 浮點數權重映射至 8-bit 整數空間，並調用 ARM NEON 指令集進行並行運算。 |
 
 ### INT8 量化原理 (Quantization Principles)
-針對邊緣運算裝置（如 Raspberry Pi 4），INT8 量化是提升推論速度的核心技術，其原理與效益如下表所示：
+針對邊緣運算裝置（如 Raspberry Pi 4），INT8 量化是提升推論速度的技術，其原理與效益如下表所示：
 
 | 優化維度 (Dimension) | 原理描述 (Mechanism) | 效能效益 (Benefit) |
 | :--- | :--- | :--- |
 | **數值映射 (Mapping)** | 將模型權重從 32-bit 浮點數 (FP32) 映射至 8-bit 整數 (INT8) 空間，透過 Scaling Factor 與 Zero-point 進行線性轉換。 | **空間縮減**：減少 75% 的模型權重體積與記憶體佔用，有利於快取命中。 |
-| **運算加速 (Acceleration)** | 利用 ARM CPU 的 SIMD (如 NEON 指令集) 進行整數並行運算，取代耗時的浮點數運算。 | **速度提升**：在非 GPU 裝置上，整數運算吞吐量高於浮點運算，提高 FPS。 |
+| **運算加速 (Acceleration)** | 利用 ARM CPU 的 SIMD (如 NEON 指令集) 進行整數並行運算，取代浮點數運算。 | **速度提升**：在非 GPU 裝置上，整數運算吞吐量高於浮點運算，提高 FPS。 |
 | **頻寬優化 (Bandwidth)** | 降低資料在 CPU 與記憶體（DRAM）之間傳輸所需的位元寬度。 | **降低延遲**：減少記憶體存取瓶頸（Memory Bound），提升系統整體的響應速度。 |
 
 ---
@@ -109,9 +108,9 @@ graph TD
 ```
 
 **5/25 效能優化更新**：
-為了在 Raspberry Pi 4 等資源受限設備上進一步提升 FPS，系統追加了以下前處理優化：
-*   **色彩感知感興趣區域 (Color-based ROI Masking)**：透過快速的 HSV 色彩統計檢查，若畫面中無疑似火煙色彩則跳過 YOLO 推論，大幅降低靜態背景下的運算負載。
-*   **硬體加速查表法 (LUT Optimization)**：預計算 Gamma 修正映射表並重用 CLAHE 物件，將複雜運算轉化為高效的記憶體查表，降低每幀影像增強的 CPU 耗時。
+為了在 Raspberry Pi 4 等資源受限設備上提升 FPS，系統追加了以下前處理優化：
+*   **色彩感知感興趣區域 (Color-based ROI Masking)**：透過 HSV 色彩統計檢查，若畫面中無火煙色彩則跳過 YOLO 推論，降低靜態背景下的運算負載。
+*   **查表法 (LUT Optimization)**：預計算 Gamma 修正映射表並重用 CLAHE 物件，將運算轉化為記憶體查表，降低每幀影像增強的 CPU 耗時。
 
 ### MSC (Message Sequence Chart - 訊息循序圖)
 ```mermaid
@@ -136,39 +135,13 @@ sequenceDiagram
 | `predict_image` | `model, image, ...` | YOLO Object, PIL.Image, ... | `Tuple[Numpy Array, String]` | 執行 `model.predict()` 並回傳標註影像。 |
 | `apply_preprocessing` | `frame, ...` | Numpy Array, ... | Numpy Array | 執行影像增強 (CLAHE + Gamma LUT)。 |
 
-### 影像處理管線 (Image Processing Pipeline)
-以下展示單張影像經過系統前處理與推論階段的各個中間結果：
-
-<div style="display: flex; justify-content: space-around; flex-wrap: wrap;">
-    <figure style="width: 30%; margin: 5px; text-align: center;">
-        <img src="pipeline/1_clahe.jpg" alt="CLAHE Result">
-        <figcaption>1. CLAHE 處理</figcaption>
-    </figure>
-    <figure style="width: 30%; margin: 5px; text-align: center;">
-        <img src="pipeline/2_gamma.jpg" alt="Gamma Correction">
-        <figcaption>2. Gamma 修正</figcaption>
-    </figure>
-    <figure style="width: 30%; margin: 5px; text-align: center;">
-        <img src="pipeline/3_yolo_result.jpg" alt="YOLO Inference">
-        <figcaption>3. YOLO 偵測結果</figcaption>
-    </figure>
-</div>
-
 ---
 
 
 ## 4. 驗證 (Verification)
 
-### 效能基準測試 (Benchmark - imgsz=320)
-下表展示了在不同硬體方案下的平均 FPS 表現，呈現了 Raspberry Pi 5 搭配硬體加速後的效能：
-
-| 推論方案 (Engine) | 硬體平台 (Hardware) | 加速技術 (Acceleration) | 平均 FPS | 結論 |
-| :--- | :--- | :--- | :--- | :--- |
-| **YOLOv8n (NCNN)** | Raspberry Pi 4 | CPU (INT8) | ~3.2 | 符合最低 FPS 需求 |
-| **YOLOv8n (NCNN)** | **Raspberry Pi 5** | **CPU (INT8)** | **~8.5** | 效能明顯提升 |
-
 ### 訓練指標驗證
-經過 150 Epochs 的訓練，模型 Loss 持續下降且 Precision 穩步提升。YOLOv8 Small 相比於 Nano 在各項指標上表現出領先。
+經過 150 Epochs 的訓練，模型 Loss 下降且 Precision 提升。YOLOv8 Small 相比於 Nano 在各項指標上表現較佳。
 
 ### Training Results
 Both models were trained for 150 epochs.
@@ -201,23 +174,21 @@ Some predictions which resulted in different outcomes between the models.
 #### 方案 A: NCNN CPU 偵測結果
 ![NCNN CPU](assets/videos/output_roomfire41.mp4)
 
----
+### Pipeline 耗時統計
+執行 `process_enhanced_video.py` 的管線各階段平均耗時分佈如下（基於 CPU 測試環境）：
 
-### 建議改良 (Future Improvements)
-針對當前專案系統，以下列出後續可進行的優化建議與待辦事項：
-
-| 改善方向 | 建議方案 | 預期效益 |
+| 處理階段 (Stage) | 平均耗時 (ms) | 說明 |
 | :--- | :--- | :--- |
-| **FPS 提升策略** | 實作跳幀處理 (Frame Skipping) 或進一步降低推論解析度。 | 減輕邊緣裝置的運算負載，提升系統整體的即時性。 |
-| **邊緣裝置推論升級** | 探索並實作 NCNN Vulkan 加速方案。 | 透過調用 GPU 資源進一步釋放 CPU 壓力，提升推論速度。 |
-| **硬體專屬優化** | 將 NCNN CPU 方案切換為 TensorRT GPU 方案。 | 專為 Jetson Orin Nano 等具備 NVIDIA GPU 的邊緣裝置進行深度優化，最大化硬體效能。 |
+| **前處理 (Preprocessing)** | 38.90 | 包含 CLAHE 與 Gamma Correction 影像增強 |
+| **推論 (Inference)** | 279.18 | YOLO 模型推論與 NMS 過濾 |
+| **後處理 (Post-processing)**| 1.61 | 繪製標註框與效能資訊 |
 
 ---
 
 ### GitHub 分工表
 本專案開發任務分工如下：
 
-| 學號 (Student ID) | 分工佔比 (%) | 主要工作內容 (Key Responsibilities) |
-| :--- | :--- | :--- |
-| **F114112128** | **60%** | 系統架構設計、YOLOv8 模型訓練與導出、NCNN 量化部署優化、影像增強算法 (CLAHE/Gamma) 實作、效能測試。 |
-| **C111112160** | **40%** | Streamlit Web UI 開發、Croatia 測試資料集蒐集與整理、專案文檔撰寫、測試案例驗證。 |
+| 學號 (Student ID) | 分工佔比 (%) |
+| :--- | :--- |
+| **F114112128** | **60%** |
+| **C111112160** | **40%** |

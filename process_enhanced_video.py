@@ -76,27 +76,39 @@ def worker(model_path):
     model = YOLO(final_model_path, task="detect")
     
     frame_count = 0
+    total_pre_time = 0
+    total_inf_time = 0
+    total_post_time = 0
+    
     while True:
         frame = read_queue.get()
         if frame is None:
             break
         
-        start_time = time.time()
+        t0 = time.time()
         is_first = (frame_count == 0)
         proc_frame = apply_preprocessing(frame, save_intermediate=is_first)
+        t1 = time.time()
         
         # Inference
         results = model.predict(proc_frame, imgsz=320, verbose=False, device=device)
+        t2 = time.time()
+        
         res_frame = results[0].plot()
         
         if is_first:
             cv2.imwrite("pipeline/3_yolo_result.jpg", res_frame)
         
         # Performance info
-        fps = 1 / (time.time() - start_time)
+        fps = 1 / (time.time() - t0)
         engine_type = "TensorRT GPU" if ".engine" in final_model_path else "NCNN CPU"
         cv2.putText(res_frame, f"FPS: {fps:.1f} ({engine_type})", (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-        cv2.putText(res_frame, "JETSON ORIN NANO OPTIMIZED", (20, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
+        
+        t3 = time.time()
+        
+        total_pre_time += (t1 - t0)
+        total_inf_time += (t2 - t1)
+        total_post_time += (t3 - t2)
         
         write_queue.put(res_frame)
         frame_count += 1
@@ -105,6 +117,14 @@ def worker(model_path):
             
     write_queue.put(None)
     print(f"Worker: Finished. Total {frame_count} frames.")
+    if frame_count > 0:
+        avg_pre = (total_pre_time / frame_count) * 1000
+        avg_inf = (total_inf_time / frame_count) * 1000
+        avg_post = (total_post_time / frame_count) * 1000
+        print(f"--- Pipeline Execution Time Profiling ---")
+        print(f"Average Preprocessing Time: {avg_pre:.2f} ms")
+        print(f"Average Inference Time: {avg_inf:.2f} ms")
+        print(f"Average Post-processing Time: {avg_post:.2f} ms")
 
 def writer(out_path, fps_in, width, height):
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
