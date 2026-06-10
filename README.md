@@ -15,20 +15,13 @@
     * **Nano 模型**：推論速度較快但精準度稍低。
     * **Small 模型**：速度稍慢但擁有較高的精確度與信心水準。
 
-### 限制與環境
+### 限制
 * **環境**：Python 3.10+ (支援 ARM64 架構如 Raspberry Pi)。
 * **管理**：使用 **uv** 管理的虛擬環境來執行。
 * **硬體**：
     * **開發與訓練**：Nvidia RTX 3070 Ti (CUDA)。
     * **部署與推論**：支援 Raspberry Pi 4 (CPU)。
 * **界面**：採用 Streamlit 構建的 Web UI。
-
-### 邊緣運算優化 (Edge AI Optimization)
-針對 **Raspberry Pi 4** 與 **Raspberry Pi 5** 等裝置，本專案提供以下優化措施：
-* **尺寸優化**：建議將 `imgsz` 調降至 **320**，以平衡推論延遲與精確度。
-* **模型轉換 (CPU)**：支援轉換為 **NCNN** (Next Generation CNN) 格式，針對 ARM 平台（如 NEON 指令集）進行優化，提升在 Raspberry Pi 等 CPU 上的推論效率。
-* **硬體加速 (NPU)**：針對 Raspberry Pi 5，支援搭配 AI 加速模組進行優化。
-    * **原理簡述**：透過神經網路加速器 (NPU) 進行運算圖優化，提升 Raspberry Pi 5 的推論吞吐量。
 
 ### 界面
 * **檔案輸入 (File Input)**：支援從本機上傳圖片（jpg, jpeg, png）。
