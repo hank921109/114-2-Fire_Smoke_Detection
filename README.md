@@ -172,7 +172,7 @@ Some predictions which resulted in different outcomes between the models.
 ### 為了測試著火的準確率：
 
 #### 方案 A: NCNN CPU 偵測結果
-![NCNN CPU](assets/videos/output_roomfire41.mp4)
+![NCNN CPU](assets/videos/output_roomfire41.gif)
 
 ### Pipeline 耗時統計
 執行 `process_enhanced_video.py` 的管線各階段平均耗時分佈如下（基於 CPU 測試環境）：
