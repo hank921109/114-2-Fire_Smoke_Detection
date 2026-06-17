@@ -198,7 +198,7 @@ Some predictions which resulted in different outcomes between the models.
 | **影像後處理 (Post-processing)** | 5.48 ms | 0.75% | 包含 NMS（非極大值抑制）與邊框座標解析 |
 | **每幀總耗時 (Total Time per Frame)** | **728.93 ms** | **100.00%** | **完整 Pipeline 推論一幀所需時間** |
 
-* **預估真實幀率 (Estimated Live FPS)**：🌟 **1.37 FPS** （計算公式：$1000 / 728.93 \text{ ms}$）
+* **預估真實幀率 (Estimated Live FPS)**：🌟 **1.37 FPS** （計算公式：$1000 / 728.93 ms）
 
 ##### 💡 實機邊緣端效能深度分析與後續優化方向
 1. **推論延遲瓶頸 (Inference Bottleneck)**：在樹莓派 4 CPU 資源限制下，模型推論耗時高達 **566.27 ms (77.68%)**，是主要的效能瓶頸。後續規劃將模型量化為 **INT8 / FP16** 格式，或導入 **OpenVINO / ONNX Runtime (ARM Neon 加速)** 以逼近當初 >3 FPS 的預期目標。
