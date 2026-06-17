@@ -181,7 +181,12 @@ Some predictions which resulted in different outcomes between the models.
 #### 2. 邊緣端實機部署驗證（Raspberry Pi 4 效能評測）
 本專案成功移置邊緣運算裝置進行實機測試，完整處理測試影片 `roomfire41.mp4` 共計 **873 幀 (Frames)**。
 
-* **實機環境規格**：Raspberry Pi 4 Model B Rev 1.4 (ARM Cortex-A72) / 作業系統：Raspberry Pi OS (64-bit)
+**實機測試環境規格 (Edge Deployment Environment)**：
+* **硬體平台**：Raspberry Pi 4 Model B (Rev 1.4)
+* **CPU 核心**：Broadcom BCM2711, Quad-core ARM Cortex-A72 @ 1.5GHz
+* **記憶體 (RAM)**：4GB LPDDR4
+* **作業系統**：Raspberry Pi OS (64-bit) / Kernel 6.x
+* **AI 部署架構**：CPU-based Inference (via ARM NEON SIMD optimizations)
 * **測試成果輸出**：推論後的標註影片已成功儲存至 `assets/videos/tensorrt_output_roomfire41.mp4`
 
 實機管線（Pipeline）各階段平均耗時 Profiling 數據如下：
