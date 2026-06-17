@@ -169,41 +169,26 @@ Some predictions which resulted in different outcomes between the models.
 
 ### Pipeline 耗時統計
 
-#### 1. 開發環境測試（PC CPU 模擬基準）
-執行 `process_enhanced_video.py` 的管線各階段平均耗時分佈如下（基於 CPU 測試環境）：
+以下圖表比較了「開發環境（PC CPU）」與「邊緣端實機（Raspberry Pi 4）」在管線各階段的平均耗時：
 
-| 處理階段 (Stage) | 平均耗時 (ms) | 說明 |
-| :--- | :--- | :--- |
-| **前處理 (Preprocessing)** | 38.90 | 包含 CLAHE 與 Gamma Correction 影像增強 |
-| **推論 (Inference)** | 279.18 | YOLO 模型推論與 NMS 過濾 |
-| **後處理 (Post-processing)**| 1.61 | 繪製標註框與效能資訊 |
+![Pipeline 耗時直方圖比較](assets/images/pipeline_time_comparison.jpg)
 
-#### 2. 邊緣端實機部署驗證（Raspberry Pi 4 效能評測）
-本專案成功移置邊緣運算裝置進行實機測試，完整處理測試影片 `roomfire41.mp4` 共計 **873 幀 (Frames)**。
+* **開發環境測試**：執行 `process_enhanced_video.py`，前處理包含 CLAHE 與 Gamma Correction 影像增強，後處理包含繪製標註框與效能資訊。
+* **邊緣端實機部署驗證**：處理測試影片 `roomfire41.mp4` 共計 **873 幀 (Frames)**。前處理包含實機影像解碼、尺寸縮放（Resize）與通道轉換；推論階段為神經網路特徵提取與目標偵測計算；後處理包含 NMS（非極大值抑制）與邊框座標解析。
 
 **實機測試環境規格 (Edge Deployment Environment)**：
 * **硬體平台**：Raspberry Pi 4 Model B (Rev 1.4)
 * **CPU 核心**：Broadcom BCM2711, Quad-core ARM Cortex-A72 @ 1.5GHz
 * **記憶體 (RAM)**：4GB LPDDR4
-* **作業系統**：Raspberry Pi OS (64-bit) / Kernel 6.x
 * **AI 部署架構**：CPU-based Inference (via ARM NEON SIMD optimizations)
-* **測試成果輸出**：推論後的標註影片已成功儲存至 `assets/videos/tensorrt_output_roomfire41.mp4`
 
-實機管線（Pipeline）各階段平均耗時 Profiling 數據如下：
-
-| 處理階段 (Stage) | 平均耗時 (Average Time) | 運算佔比 (Percentage) | 說明 (Description) |
-| :--- | :--- | :---: | :--- |
-| **影像前處理 (Preprocessing)** | 157.18 ms | 21.56% | 包含實機影像解碼、尺寸縮放（Resize）與通道轉換 |
-| **模型推論 (Inference)** | 566.27 ms | 77.68% | 核心神經網路特徵提取與目標偵測計算 |
-| **影像後處理 (Post-processing)** | 5.48 ms | 0.75% | 包含 NMS（非極大值抑制）與邊框座標解析 |
-| **每幀總耗時 (Total Time per Frame)** | **728.93 ms** | **100.00%** | **完整 Pipeline 推論一幀所需時間** |
-
+* **每幀總耗時 (Total Time per Frame)**：**728.93 ms**（Pipeline 推論一幀所需時間）
 * **預估真實幀率 (Estimated Live FPS)**：🌟 **1.37 FPS** （計算公式：$1000 / 728.93 ms）
 
-##### 💡 實機邊緣端效能深度分析與後續優化方向
-1. **推論延遲瓶頸 (Inference Bottleneck)**：在樹莓派 4 CPU 資源限制下，模型推論耗時高達 **566.27 ms (77.68%)**，是主要的效能瓶頸。後續規劃將模型量化為 **INT8 / FP16** 格式，或導入 **OpenVINO / ONNX Runtime (ARM Neon 加速)** 以逼近當初 >3 FPS 的預期目標。
-2. **前處理開銷優化空間**：邊緣端上的影像增強與前處理耗時放大至 **157.18 ms**。後續可透過 OpenCV 啟用硬體加速（如 `cv2.UMat`），或改用多線程（Multi-threading）將影像讀取與前處理異步化，避免前處理阻塞主推論管線。
-3. **後處理高效能表現**：後處理僅耗時 **5.48 ms (0.75%)**，表現極為優異，說明目前的 NMS 與應答解析機制非常輕量，無需額外調整。
+##### 3. 實機邊緣端效能分析與後續優化方向
+1. **推論延遲瓶頸 (Inference Bottleneck)**：在樹莓派 4 CPU 資源限制下，模型推論耗時 **566.27 ms (77.68%)**，是效能瓶頸。後續規劃將模型量化為 **INT8 / FP16** 格式，或導入 **OpenVINO / ONNX Runtime (ARM Neon 加速)** 以達到 >3 FPS 的目標。
+2. **前處理開銷優化空間**：邊緣端上的影像增強與前處理耗時 **157.18 ms**。後續可透過 OpenCV 啟用硬體加速（如 `cv2.UMat`），或改用多線程（Multi-threading）將影像讀取與前處理異步化，避免前處理阻塞主推論管線。
+3. **後處理效能**：後處理僅耗時 **5.48 ms (0.75%)**，說明目前的 NMS 與應答解析機制輕量，無需額外調整。
 
 ---
 

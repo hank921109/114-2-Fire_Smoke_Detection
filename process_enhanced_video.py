@@ -134,12 +134,18 @@ def writer(out_path, fps_in, width, height):
         if frame is None:
             break
         out.write(frame)
+        cv2.imshow("Video Preview", frame)
+        cv2.waitKey(1)
     out.release()
+    cv2.destroyAllWindows()
     print(f"Writer: Finished. Saved to {out_path}")
 
 def run():
-    in_video = "assets/videos/roomfire41.mp4"
-    out_video = "assets/videos/tensorrt_output_roomfire41.mp4"
+    import sys
+    in_video = sys.argv[1] if len(sys.argv) > 1 else "assets/videos/roomfire41.mp4"
+    base_name = os.path.basename(in_video)
+    # Output path handles relative paths smoothly
+    out_video = os.path.join(os.path.dirname(in_video) or ".", f"output_{base_name}")
     model_pt = "Deployment/Models/nano.pt"
     
     if not os.path.exists(in_video):

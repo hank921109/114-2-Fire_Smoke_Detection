@@ -17,7 +17,8 @@ torch.load = _torch_load_patch
 if not os.path.exists("pipeline"):
     os.makedirs("pipeline")
 
-image_path = "assets/images/smoke_fire_true_positive_nano.jfif"
+import sys
+image_path = sys.argv[1] if len(sys.argv) > 1 else "assets/images/smoke_fire_true_positive_nano.jfif"
 model_path = "Deployment/Models/nano.pt"
 
 if not os.path.exists(image_path):
@@ -52,3 +53,8 @@ res_frame = results[0].plot()
 cv2.imwrite("pipeline/3_yolo_result.jpg", res_frame)
 
 print("Pipeline execution completed for single image.")
+cv2.imshow("Original Image", frame)
+cv2.imshow("Detection Result", res_frame)
+print("Press any key on either image window to close...")
+cv2.waitKey(0)
+cv2.destroyAllWindows()
