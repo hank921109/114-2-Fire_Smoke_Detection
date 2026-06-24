@@ -144,6 +144,21 @@ Both models were trained for 150 epochs.
 </div>
 <p align="center"><i>Fig 1. Comparison of Training Metrics (Loss, Precision, mAP) between Nano and Small models over 150 epochs.</i></p>
 
+### 損失函數分析 (Loss Functions)
+損失函數用於衡量模型預測值與真實標籤之間的差距，數值越低代表模型學得越好。
+* **train/box_loss & val/box_loss**：邊界框（Bounding Box）回歸損失。用於評估模型定位物體位置的準確度。從圖中可見訓練集與驗證集的損失皆持續穩定下降，並在後期趨於平緩，顯示模型在物體定位上已達良好收斂。
+* **train/cls_loss & val/cls_loss**：分類（Classification）損失。用於評估模型辨識物體類別的正確性。驗證集分類損失（val/cls_loss）在初期有較大波動，隨後迅速收斂並降至接近 0，未出現過擬合（Overfitting）跡象。
+* **train/dfl_loss & val/dfl_loss**：分佈焦點損失（Distribution Focal Loss）。用於微調邊界框與邊緣的精細度，兩者均呈現平滑下降趨勢。
+
+### 評估指標分析 (Performance Metrics)
+精準度指標用於衡量模型在驗證集上的實際表現，數值越高（越接近 1）代表性能越好。
+* **metrics/precision(B)**：精準率（Precision）。代表模型預測為陽性的樣本中，真正為陽性的比例。最終達到約 **0.90 (90%)**。
+* **metrics/recall(B)**：召回率（Recall）。代表所有真實陽性樣本中，被模型成功偵測出來的比例。最終達到約 **0.85 (85%)**。
+* **metrics/mAP50(B)**：在 IoU 閾值為 0.5 時的平均精度平均值（mean Average Precision）。是物件偵測非常關鍵的指標，圖中顯示該指標快速攀升並穩定維持在 **0.90 (90%)** 以上的高水準。
+* **metrics/mAP50-95(B)**：在不同 IoU 閾值（從 0.5 到 0.95，步長 0.05）下的綜合平均精度。此指標要求更嚴苛，最終穩定成長至約 **0.65 (65%)**。
+
+---
+
 ### 偵測結果示例 (Detection Results)
 Both models demonstrated consistent performance across the tested images.
 <div style="display: flex; justify-content: space-around; flex-wrap: wrap;">
