@@ -57,7 +57,7 @@ graph LR
     UI --> Enhancement["影像增強: CLAHE + Gamma"]
 
     System --> Core[Inference: YOLOv8 推論引擎]
-    Core --> Predict["模型推論: NCNN INT8 / Raspi 5 NPU"]
+    Core --> Predict["模型推論: NCNN INT8 / Raspi 4 CPU"]
 
     System --> Post[Post-processing: OpenCV / Numpy]
     Post --> Overlay["結果標記: results[0].plot() & cv2.putText()"]
