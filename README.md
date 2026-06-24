@@ -183,7 +183,7 @@ Some predictions which resulted in different outcomes between the models.
 * **AI 部署架構**：CPU-based Inference (via ARM NEON SIMD optimizations)
 
 * **每幀總耗時 (Total Time per Frame)**：**728.93 ms**（Pipeline 推論一幀所需時間）
-* **預估真實幀率 (Estimated Live FPS)**：🌟 **1.37 FPS** （計算公式：$1000 / 728.93 ms）
+* **預估真實幀率 (Estimated Live FPS)**：🌟 **1.37 FPS** （計算公式：1000 / 728.93 ms）
 
 ##### 3. 實機邊緣端效能分析與後續優化方向
 1. **推論延遲瓶頸 (Inference Bottleneck)**：在樹莓派 4 CPU 資源限制下，模型推論耗時 **566.27 ms (77.68%)**，是效能瓶頸。後續規劃將模型量化為 **INT8 / FP16** 格式，或導入 **OpenVINO / ONNX Runtime (ARM Neon 加速)** 以達到 >3 FPS 的目標。
